@@ -18,7 +18,8 @@ Rayfield:Notify({
  
 local Main = Window:CreateTab("Main")
 local Gun = Window:CreateTab("Gun")
- 
+local Other = Window:CreateTab("Other")
+
 local Tab1 = Main:CreateSection("Auto-Steal")
  
 local Toggle = Main:CreateToggle({
@@ -161,6 +162,16 @@ local Toggle = Main:CreateToggle({
     end,
  })
  
+local Tab1 = Other:CreateSection("Fly")
+
+local Button = Other:CreateButton({
+    Name = "Start Fly [X] To Enable/Disable",
+    Callback = function()
+        -- Execute the loadstring when the button is pressed
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/OfficialHaggMarts/DarkLife/refs/heads/main/fly.lua"))()
+    end
+})
+
  local Tab1 = Gun:CreateSection("Change Stats")
  
  local Button = Gun:CreateButton({
