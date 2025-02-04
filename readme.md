@@ -1,4 +1,4 @@
-Script made by @notxynx on discord.
+# Script made by @notxynx.
 
-Script:
-Loadstring(game:HttpGet("https://raw.githubusercontent.com/OfficialHaggMarts/DarkLife/refs/heads/main/DarklifeV2")()
+## Script:
+```Loadstring(game:HttpGet("https://raw.githubusercontent.com/OfficialHaggMarts/DarkLife/refs/heads/main/DarklifeV2")()```
