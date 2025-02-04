@@ -165,7 +165,7 @@ local Toggle = Main:CreateToggle({
 local Tab1 = Other:CreateSection("Fly")
 
 local Button = Other:CreateButton({
-    Name = "Start Fly [X] To Enable/Disable",
+    Name = "Start Fly (X To Enable/Disable)",
     Callback = function()
         -- Execute the loadstring when the button is pressed
         loadstring(game:HttpGet("https://raw.githubusercontent.com/OfficialHaggMarts/DarkLife/refs/heads/main/fly.lua"))()
