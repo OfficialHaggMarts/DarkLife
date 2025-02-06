@@ -23,27 +23,51 @@ local Tabs = {
 
 local Options = Fluent.Options
 
-local Section = Tabs.Main:AddSection("AutoSteal")
+local Section = Tabs.Main:AddSection("AutoSteal-Cash")
+-- Create an input field for the minimum value
+local MinValueInput = Section:AddInput("MinValue", {
+    Title = "Minimum Cash Amount",
+    Description = "Only steal cash bags above this amount.",
+    Default = "0",
+    Placeholder = "Enter minimum amount",
+    Numeric = true,
+    Finished = true,
+    Callback = function(Value)
+        print("Minimum value set to:", Value)
+    end
+})
+
+-- Create the AutoStealCash toggle
 Section:AddToggle("AutoStealCash", {Title = "Auto Steal Cash", Default = false})
 Options.AutoStealCash:OnChanged(function()
     while Options.AutoStealCash.Value do
         task.wait()
         local player = game:GetService("Players").LocalPlayer
         local character = player.Character
+        local minAmount = tonumber(MinValueInput.Value) or 0
+
         if character and character:FindFirstChild("HumanoidRootPart") then
             local humanoidRootPart = character.HumanoidRootPart
             local originalPosition = humanoidRootPart.CFrame
-            for _, v in pairs(game.Workspace.money_bags:GetDescendants()) do
-                if v:IsA("Part") then
-                    humanoidRootPart.CFrame = v.CFrame
-                    task.wait(0.15)
-                    humanoidRootPart.CFrame = originalPosition
+            
+            for _, v in pairs(game.Workspace.money_bags:GetChildren()) do
+                if v:IsA("Model") and v:FindFirstChild("Amount") then
+                    local amountValue = v.Amount.Value
+                    
+                    if amountValue >= minAmount then
+                        if v:FindFirstChildOfClass("Part") then
+                            humanoidRootPart.CFrame = v:FindFirstChildOfClass("Part").CFrame
+                            task.wait(0.15)
+                            humanoidRootPart.CFrame = originalPosition
+                        end
+                    end
                 end
             end
         end
     end
 end)
 
+local Section = Tabs.Main:AddSection("AutoSteal-Guns")
 Section:AddToggle("AutoStealGunsArmor", {Title = "Auto Steal Guns & Armor", Default = false})
 Options.AutoStealGunsArmor:OnChanged(function()
     shared["AutoStealGunsArmor"] = Options.AutoStealGunsArmor.Value
@@ -52,7 +76,6 @@ Options.AutoStealGunsArmor:OnChanged(function()
         local player = game:GetService("Players").LocalPlayer
         local character = player.Character
         if not character or not character:FindFirstChild("HumanoidRootPart") then
-            continue
         end
 
         local humanoidRootPart = character.HumanoidRootPart
@@ -67,9 +90,9 @@ Options.AutoStealGunsArmor:OnChanged(function()
                     Content = ("Stole item: " .. weapon.Name .. " (numbers mean armor)"),
                     Duration = 5,
                 })
-                task.wait(0.15)
-                weapon:Destroy()
                 task.wait(0.25)
+                weapon:Destroy()
+                task.wait(0.35)
                 humanoidRootPart.CFrame = originalPosition
             end
         end
@@ -90,6 +113,74 @@ Section:AddParagraph({
 })
 
 local Section = Tabs.LocalPlayer:AddSection("Upgrades")
+-- Run Upgrade Slider
+local player = game.Players.LocalPlayer
+local playerFolder = game.Workspace:FindFirstChild(player.Name)
+local upgradeRun = playerFolder and playerFolder:FindFirstChild("Upgrade.Run")
+
+-- Store the original run value
+local originalRunValue = upgradeRun and upgradeRun:IsA("NumberValue") and upgradeRun.Value or 16 -- Default to 16 if nil
+
+local RunUpgradeSlider = Section:AddSlider("RunUpgradeSlider", {
+    Title = "Spoof Run Upgrade",
+    Description = "Spoof Run Upgrade to modify your speed temporarily.",
+    Default = originalRunValue, -- Start at the original value
+    Min = 0,
+    Max = 500,
+    Rounding = 1,
+    Callback = function(Value)
+        if upgradeRun and upgradeRun:IsA("NumberValue") then
+            upgradeRun.Value = Value
+        else
+            Fluent:Notify({
+                Title = "Impulse",
+                Content = "Issue Modifying Run Upgrade!",
+                Duration = 5,
+            })
+        end
+    end
+})
+
+RunUpgradeSlider:OnChanged(function(Value)
+    if upgradeRun and upgradeRun:IsA("NumberValue") then
+        upgradeRun.Value = Value
+    end
+end)
+
+-- Jump Upgrade Slider
+local player = game.Players.LocalPlayer
+local playerFolder = game.Workspace:FindFirstChild(player.Name)
+local upgradejump = playerFolder and playerFolder:FindFirstChild("Upgrade.Jump")
+
+-- Store the original jump value
+local originalJumpValue = upgradejump and upgradejump:IsA("NumberValue") and upgradejump.Value or 50 -- Default to 50 if nil
+
+local JumpUpgradeSlider = Section:AddSlider("JumpUpgradeSlider", {
+    Title = "Spoof Jump Upgrade",
+    Description = "Spoof Jump Upgrade to modify your jump temporarily.",
+    Default = originalJumpValue, -- Start at the original value
+    Min = 0,
+    Max = 500,
+    Rounding = 1,
+    Callback = function(Value)
+        if upgradejump and upgradejump:IsA("NumberValue") then
+            upgradejump.Value = Value
+        else
+            Fluent:Notify({
+                Title = "Impulse",
+                Content = "Issue Modifying Jump Upgrade!",
+                Duration = 5,
+            })
+        end
+    end
+})
+
+JumpUpgradeSlider:OnChanged(function(Value)
+    if upgradejump and upgradejump:IsA("NumberValue") then
+        upgradejump.Value = Value
+    end
+end)
+
 -- Lifsteal Upgrade 
 Section:AddButton({
     Title = "Set Max Lifesteal Upgrade",
@@ -139,76 +230,6 @@ Section:AddButton({
     end
 })
 
--- Run Upgrade Slider
-local RunUpgradeSlider = Section:AddSlider("RunUpgradeSlider", {
-    Title = "Spoof Run Upgrade",
-    Description = "Spoof Run Upgrade to modify your speed temporarily.",
-    Default = 0,
-    Min = 0,
-    Max = 500,
-    Rounding = 1,
-    Callback = function(Value)
-        local player = game.Players.LocalPlayer
-        local playerFolder = game.Workspace:FindFirstChild(player.Name)
-        local upgradeRun = playerFolder and playerFolder:FindFirstChild("Upgrade.Run")
-
-        if upgradeRun and upgradeRun:IsA("NumberValue") then
-            upgradeRun.Value = Value
-        else
-            Fluent:Notify({
-                Title = "Impulse",
-                Content = "Issue Modifying Run Upgrade! (Upgrade.Run not found)",
-                Duration = 5,
-            })
-        end
-    end
-})
-
-RunUpgradeSlider:OnChanged(function(Value)
-    local player = game.Players.LocalPlayer
-    local playerFolder = game.Workspace:FindFirstChild(player.Name)
-    local upgradeRun = playerFolder and playerFolder:FindFirstChild("Upgrade.Run")
-
-    if upgradeRun and upgradeRun:IsA("NumberValue") then
-        upgradeRun.Value = Value
-    end
-end)
-
--- Jump Upgrade Slider
-local JumpUpgradeSlider = Section:AddSlider("JumpUpgradeSlider", {
-    Title = "Spoof Jump Upgrade",
-    Description = "Spoof Jump Upgrade to modify your speed temporarily.",
-    Default = 0,
-    Min = 0,
-    Max = 500,
-    Rounding = 1,
-    Callback = function(Value)
-        local player = game.Players.LocalPlayer
-        local playerFolder = game.Workspace:FindFirstChild(player.Name)
-        local upgradejump = playerFolder and playerFolder:FindFirstChild("Upgrade.Jump")
-
-        if upgradejump and upgradejump:IsA("NumberValue") then
-            upgradejump.Value = Value
-        else
-            Fluent:Notify({
-                Title = "Impulse",
-                Content = "Issue Modifying Jump Upgrade!",
-                Duration = 5,
-            })
-        end
-    end
-})
-
-JumpUpgradeSlider:OnChanged(function(Value)
-    local player = game.Players.LocalPlayer
-    local playerFolder = game.Workspace:FindFirstChild(player.Name)
-    local upgradejump = playerFolder and playerFolder:FindFirstChild("Upgrade.Jump")
-
-    if upgradejump and upgradejump:IsA("NumberValue") then
-        upgradejump.Value = Value
-    end
-end)
-
 local Section = Tabs.Teleports:AddSection("Deposits")
 Section:AddToggle("AutoDeposit", {Title = "Auto Deposit", Description = "Automatically Teleports you to a Deposit circle every 0.5 seconds.", Default = false})
 Options.AutoDeposit:OnChanged(function()
@@ -245,6 +266,7 @@ local Dropdown = Section:AddDropdown("JewelryFloors", {
     Title = "Teleport to Jewelry Floor",
     Description = "Select a floor to teleport to.",
     Values = {
+        "Select A Jewelry Floor",
         "First Floor",
         "Second Floor",
         "Third Floor"
@@ -260,9 +282,14 @@ local teleportLocations = {
 }
 
 Dropdown:OnChanged(function(Value)
+    if not Value then return end -- Prevent errors
+
     local player = game.Players.LocalPlayer
     if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = teleportLocations[Value]
+        local targetCFrame = teleportLocations[Value]
+        if targetCFrame then
+            player.Character.HumanoidRootPart.CFrame = targetCFrame
+        end
     end
 end)
 
@@ -272,6 +299,7 @@ local Dropdown = Section:AddDropdown("Gunstore", {
     Title = "Gun Stores",
     Description = "Select a Gun store to teleport to.",
     Values = {
+        "Select A Gun Store",
         "Main",
         "Bank",
         "Warehouse",
@@ -291,9 +319,14 @@ local teleportLocations = {
 }
 
 Dropdown:OnChanged(function(Value)
+    if not Value then return end -- Prevent errors
+
     local player = game.Players.LocalPlayer
     if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = teleportLocations[Value]
+        local targetCFrame = teleportLocations[Value]
+        if targetCFrame then
+            player.Character.HumanoidRootPart.CFrame = targetCFrame
+        end
     end
 end)
 
@@ -302,6 +335,7 @@ local Dropdown = Section:AddDropdown("Foodstores", {
     Title = "Food Stores",
     Description = "Select a Food Store to teleport to.",
     Values = {
+        "Select A Food Store",
         "Bank",
         "Warehouse",
         "Jewelry"
@@ -317,9 +351,14 @@ local teleportLocations = {
 }
 
 Dropdown:OnChanged(function(Value)
+    if not Value then return end -- Prevent errors
+
     local player = game.Players.LocalPlayer
     if player and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = teleportLocations[Value]
+        local targetCFrame = teleportLocations[Value]
+        if targetCFrame then
+            player.Character.HumanoidRootPart.CFrame = targetCFrame
+        end
     end
 end)
 
@@ -425,6 +464,33 @@ else
 end
 })
 
+local Section = Tabs.Misc:AddSection("Universal")
+Section:AddButton({
+    Title = "No E Wait",
+    Description = "No waiting on stomping or collecting money from printers.",
+    Callback = function()
+
+        -- Loop Instant Proximity Prompt By xynx
+local Workspace = game:GetService("Workspace")
+
+local function updateProximityPrompts()
+    for i, v in ipairs(Workspace:GetDescendants()) do
+        if v.ClassName == "ProximityPrompt" then
+            v.HoldDuration = 0.0001
+        end
+    end
+end
+
+updateProximityPrompts()
+
+Workspace.DescendantAdded:Connect(function(descendant)
+    if descendant.ClassName == "ProximityPrompt" then
+        descendant.HoldDuration = 0.0001
+    end
+  end)
+end
+
+})
 -- Finalize
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
