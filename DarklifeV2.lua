@@ -57,7 +57,7 @@ Options.AutoStealCash:OnChanged(function()
                     if amountValue >= minAmount then
                         if v:FindFirstChildOfClass("Part") then
                             humanoidRootPart.CFrame = v:FindFirstChildOfClass("Part").CFrame
-                            task.wait(0.15)
+                            task.wait(0.10)
                             humanoidRootPart.CFrame = originalPosition
                         end
                     end
